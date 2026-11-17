@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: droitfacile
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/droitfacile
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update      # Hibernate cree/met a jour les tables depuis les @Entity
+    open-in-view: false
+
+  app:
+    jwt:
+      secret: change-me-change-me-change-me-change-me-123456   # 32 caracteres minimum
+      expiration-ms: 86400000
+    admin:
+      email: admin@droitfacile.com
+      password: Admin12345
+
+  server:
+    error:
+      include-message: always
+      include-binding-errors: always
+
