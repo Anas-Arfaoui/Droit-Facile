@@ -1,6 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ApiError } from "@/api/client";
+import { createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
 import {
   ArrowLeft,
@@ -14,21 +17,52 @@ import {
   Upload,
 } from "lucide-react";
 import { AppHeader, LevelBadge } from "@/components/AppHeader";
-import {
-  cannedAnswers,
-  clauses,
-  dossiers,
-  fallbackAnswer,
-  summary,
-  type Answer,
-} from "@/lib/demo-data";
+import { cannedAnswers, clauses, fallbackAnswer, summary, type Answer } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/dossiers/$id")({
-  loader: ({ params }) => {
-    const d = dossiers.find((x) => x.id === params.id);
-    if (!d) throw notFound();
-    return d;
+  loader: async ({ params }) => {
+    const id = Number(params.id);
+
+    if (!Number.isInteger(id)) {
+      throw notFound();
+    }
+
+    try {
+      const dossier = await getDossier(id);
+
+      return {
+        ...dossier,
+
+        // Temporary compatibility fields for the existing UI.
+        client: dossier.clientNom,
+        title: {
+          fr: dossier.titre,
+          ar: dossier.titre,
+        },
+        status: {
+          fr: dossier.statut,
+          ar: dossier.statut,
+        },
+        step:
+          dossier.statut === "CLOTURE"
+            ? 3
+            : dossier.statut === "EN_ATTENTE"
+              ? 2
+              : dossier.statut === "EN_COURS"
+                ? 1
+                : 0,
+        contract: "contrat.pdf",
+        token: String(dossier.id),
+        updated: new Date(dossier.creeLe).toLocaleDateString(),
+      };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        throw notFound();
+      }
+
+      throw error;
+    }
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -55,6 +89,14 @@ type Tab = "analysis" | "chat" | "summary" | "sharing";
 function DossierPage() {
   const d = Route.useLoaderData();
   const { t, l } = useI18n();
+  const seancesQuery = useQuery({
+    queryKey: ["dossier-seances", d.id],
+    queryFn: () => listSeances(d.id),
+  });
+  const [sessionDate, setSessionDate] = useState("");
+  const [sessionNotes, setSessionNotes] = useState("");
+  const [sessionBusy, setSessionBusy] = useState(false);
+  const [sessionError, setSessionError] = useState("");
   const [tab, setTab] = useState<Tab>("analysis");
   const [state, setState] = useState<"idle" | "loading" | "done">(d.step >= 2 ? "done" : "idle");
   const [validated, setValidated] = useState(d.step >= 3);
@@ -66,7 +108,30 @@ function DossierPage() {
     setState("loading");
     setTimeout(() => setState("done"), 1800);
   };
+  async function handleCreateSeance(event: React.FormEvent) {
+    event.preventDefault();
 
+    if (!sessionDate || sessionBusy) return;
+
+    setSessionBusy(true);
+    setSessionError("");
+
+    try {
+      await createSeance(
+        d.id,
+        new Date(sessionDate).toISOString(),
+        sessionNotes.trim() || undefined,
+      );
+
+      setSessionDate("");
+      setSessionNotes("");
+      await seancesQuery.refetch();
+    } catch {
+      setSessionError("Impossible d'enregistrer la séance.");
+    } finally {
+      setSessionBusy(false);
+    }
+  }
   return (
     <div className="min-h-screen">
       <AppHeader />
@@ -88,6 +153,75 @@ function DossierPage() {
 
         <div className="mt-4 rounded-md border-s-4 border-accent bg-accent/10 px-4 py-2 text-sm">
           {t("ruleBanner")}
+        </div>
+
+        <div className="mt-6 rounded-lg border border-border bg-card p-5">
+          <h2 className="text-xl">Séances</h2>
+
+          <form
+            onSubmit={handleCreateSeance}
+            className="mt-4 space-y-3 rounded-md border border-border p-4"
+          >
+            <label className="block text-sm font-medium">
+              Date de la séance
+              <input
+                type="datetime-local"
+                required
+                value={sessionDate}
+                onChange={(event) => setSessionDate(event.target.value)}
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+
+            <label className="block text-sm font-medium">
+              Notes
+              <textarea
+                value={sessionNotes}
+                onChange={(event) => setSessionNotes(event.target.value)}
+                rows={3}
+                placeholder="Notes de la séance"
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+
+            {sessionError && (
+              <p role="alert" className="text-sm text-destructive">
+                {sessionError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={sessionBusy}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {sessionBusy ? "Enregistrement..." : "Ajouter la séance"}
+            </button>
+          </form>
+
+          {seancesQuery.isLoading && (
+            <p className="mt-3 text-sm text-muted-foreground">Chargement des séances...</p>
+          )}
+
+          {seancesQuery.isError && (
+            <p className="mt-3 text-sm text-destructive">Impossible de charger les séances.</p>
+          )}
+
+          {!seancesQuery.isLoading && !seancesQuery.isError && seancesQuery.data?.length === 0 && (
+            <p className="mt-3 text-sm text-muted-foreground">Aucune séance enregistrée.</p>
+          )}
+
+          <div className="mt-4 space-y-3">
+            {seancesQuery.data?.map((seance) => (
+              <article key={seance.id} className="rounded-md border border-border p-3">
+                <p className="font-medium">{new Date(seance.dateSeance).toLocaleString()}</p>
+
+                {seance.notes && (
+                  <p className="mt-1 text-sm text-muted-foreground">{seance.notes}</p>
+                )}
+              </article>
+            ))}
+          </div>
         </div>
 
         <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
