@@ -12,6 +12,8 @@ export type Dossier = {
   clientId: number;
   clientNom: string;
   creeLe: string;
+  partageToken: string | null;
+  partageActif: boolean;
 };
 
 export type Seance = {
@@ -34,6 +36,16 @@ export type UpdateDossierRequest = {
 
 export async function listDossiers(): Promise<Dossier[]> {
   return apiRequest<Dossier[]>("/dossiers");
+}
+
+export async function activateDossierSharing(id: number): Promise<Dossier> {
+  return apiRequest<Dossier>(`/dossiers/${id}/partage`, {
+    method: "POST",
+  });
+}
+
+export async function getSharedDossier(token: string): Promise<Dossier> {
+  return apiRequest<Dossier>(`/dossiers/partage/${token}`);
 }
 
 export async function getDossier(id: number): Promise<Dossier> {

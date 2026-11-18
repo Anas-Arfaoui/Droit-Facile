@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "dossier")
@@ -38,4 +39,17 @@ public class Dossier {
     private User client;
 
     private LocalDateTime creeLe = LocalDateTime.now();
+    @Column(unique = true)
+    private String partageToken;
+
+    @Column(nullable = false)
+    private boolean partageActif = false;
+
+    public void activerPartage() {
+        if (partageToken == null) {
+            partageToken = UUID.randomUUID().toString();
+        }
+
+        partageActif = true;
+    }
 }

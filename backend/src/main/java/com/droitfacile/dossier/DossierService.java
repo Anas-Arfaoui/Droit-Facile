@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 /** Story : Gerer dossier client (ouvrir, modifier, changer le statut). */
 @Service
@@ -79,6 +81,28 @@ public class DossierService {
         d.setStatut(statut);
         d = dossierRepository.save(d);
         auditService.log(email, "DOSSIER_STATUT_" + statut, "Dossier", id);
+        return Response.from(d);
+    }
+
+    public Response activateSharing(Long id, String email) {
+        Dossier d = getOwned(id, email);
+
+        d.activerPartage();
+        d = dossierRepository.save(d);
+
+        auditService.log(email, "DOSSIER_PARTAGE", "Dossier", id);
+
+        return Response.from(d);
+    }
+
+    public Response getShared(String token) {
+        Dossier d = dossierRepository
+                .findByPartageTokenAndPartageActifTrue(token)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Lien de partage invalide"
+                ));
+
         return Response.from(d);
     }
 

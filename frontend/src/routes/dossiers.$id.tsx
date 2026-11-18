@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ApiError } from "@/api/client";
-import { createSeance, getDossier, listSeances } from "@/api/dossiers";
+import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
 import { AppHeader, LevelBadge } from "@/components/AppHeader";
 import { cannedAnswers, clauses, fallbackAnswer, summary, type Answer } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/dossiers/$id")({
   loader: async ({ params }) => {
@@ -89,6 +90,11 @@ type Tab = "analysis" | "chat" | "summary" | "sharing";
 function DossierPage() {
   const d = Route.useLoaderData();
   const { t, l } = useI18n();
+  const { user } = useAuth();
+  const isAvocat = user?.role === "AVOCAT" || user?.role === "ADMIN";
+  const visibleTabs: Tab[] = isAvocat
+    ? ["analysis", "chat", "summary", "sharing"]
+    : ["analysis", "chat", "summary"];
   const seancesQuery = useQuery({
     queryKey: ["dossier-seances", d.id],
     queryFn: () => listSeances(d.id),
@@ -101,6 +107,9 @@ function DossierPage() {
   const [state, setState] = useState<"idle" | "loading" | "done">(d.step >= 2 ? "done" : "idle");
   const [validated, setValidated] = useState(d.step >= 3);
   const [shared, setShared] = useState(d.step >= 3);
+  const [shareToken, setShareToken] = useState(d.partageToken ?? null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState("");
 
   const [contracts, setContracts] = useState<NewContract[]>([]);
 
@@ -132,6 +141,26 @@ function DossierPage() {
       setSessionBusy(false);
     }
   }
+
+  async function handleActivateSharing() {
+    if (shareBusy) return;
+
+    setShareBusy(true);
+    setShareError("");
+
+    try {
+      const updatedDossier = await activateDossierSharing(d.id);
+      setShareToken(updatedDossier.partageToken);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setShareError(`${error.status}: ${error.message}`);
+      } else {
+        setShareError("Impossible d'activer le partage client.");
+      }
+    } finally {
+      setShareBusy(false);
+    }
+  }
   return (
     <div className="min-h-screen">
       <AppHeader />
@@ -158,46 +187,48 @@ function DossierPage() {
         <div className="mt-6 rounded-lg border border-border bg-card p-5">
           <h2 className="text-xl">Séances</h2>
 
-          <form
-            onSubmit={handleCreateSeance}
-            className="mt-4 space-y-3 rounded-md border border-border p-4"
-          >
-            <label className="block text-sm font-medium">
-              Date de la séance
-              <input
-                type="datetime-local"
-                required
-                value={sessionDate}
-                onChange={(event) => setSessionDate(event.target.value)}
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
-              />
-            </label>
-
-            <label className="block text-sm font-medium">
-              Notes
-              <textarea
-                value={sessionNotes}
-                onChange={(event) => setSessionNotes(event.target.value)}
-                rows={3}
-                placeholder="Notes de la séance"
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
-              />
-            </label>
-
-            {sessionError && (
-              <p role="alert" className="text-sm text-destructive">
-                {sessionError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={sessionBusy}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          {isAvocat && (
+            <form
+              onSubmit={handleCreateSeance}
+              className="mt-4 space-y-3 rounded-md border border-border p-4"
             >
-              {sessionBusy ? "Enregistrement..." : "Ajouter la séance"}
-            </button>
-          </form>
+              <label className="block text-sm font-medium">
+                Date de la séance
+                <input
+                  type="datetime-local"
+                  required
+                  value={sessionDate}
+                  onChange={(event) => setSessionDate(event.target.value)}
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
+                />
+              </label>
+
+              <label className="block text-sm font-medium">
+                Notes
+                <textarea
+                  value={sessionNotes}
+                  onChange={(event) => setSessionNotes(event.target.value)}
+                  rows={3}
+                  placeholder="Notes de la séance"
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2"
+                />
+              </label>
+
+              {sessionError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {sessionError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={sessionBusy}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              >
+                {sessionBusy ? "Enregistrement..." : "Ajouter la séance"}
+              </button>
+            </form>
+          )}
 
           {seancesQuery.isLoading && (
             <p className="mt-3 text-sm text-muted-foreground">Chargement des séances...</p>
@@ -225,7 +256,7 @@ function DossierPage() {
         </div>
 
         <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
-          {(["analysis", "chat", "summary", "sharing"] as Tab[]).map((k) => (
+          {visibleTabs.map((k) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -352,20 +383,39 @@ function DossierPage() {
               ))}
               <div className="rounded-lg border border-border bg-card p-5">
                 <p className="text-sm font-medium">{t("shareLink")}</p>
-                <div
-                  className="mt-2 flex items-center gap-2 rounded-md bg-muted px-3 py-2 font-mono text-sm"
-                  dir="ltr"
-                >
-                  /suivi/{d.token}
-                  <Copy className="ms-auto h-4 w-4 text-muted-foreground" />
-                </div>
-                <Link
-                  to="/suivi/$token"
-                  params={{ token: d.token }}
-                  className="mt-3 inline-block text-sm text-primary underline"
-                >
-                  {t("viewClient")}
-                </Link>
+
+                {!shareToken ? (
+                  <>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Activez le partage pour générer un lien client.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleActivateSharing()}
+                      disabled={shareBusy}
+                      className="mt-3 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                    >
+                      {shareBusy ? "Activation..." : "Activer le partage"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-2 rounded-md bg-muted px-3 py-2 font-mono text-sm" dir="ltr">
+                      /suivi/{shareToken}
+                    </div>
+
+                    <Link
+                      to="/suivi/$token"
+                      params={{ token: shareToken }}
+                      className="mt-3 inline-block text-sm text-primary underline"
+                    >
+                      {t("viewClient")}
+                    </Link>
+                  </>
+                )}
+
+                {shareError && <p className="mt-2 text-sm text-destructive">{shareError}</p>}
               </div>
               <div className="rounded-lg border border-border bg-card p-5">
                 <label className="flex items-center gap-3 text-sm">

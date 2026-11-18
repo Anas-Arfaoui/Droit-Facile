@@ -50,4 +50,17 @@ public class DossierController {
     public Response changeStatut(@PathVariable Long id, @Valid @RequestBody StatutRequest req, Authentication auth) {
         return service.changeStatut(id, req.statut(), auth.getName());
     }
+    @PostMapping("/{id}/partage")
+    @PreAuthorize("hasRole('AVOCAT')")
+    public Response activateSharing(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        return service.activateSharing(id, auth.getName());
+    }
+
+    @GetMapping("/partage/{token}")
+    public Response shared(@PathVariable String token) {
+        return service.getShared(token);
+    }
 }

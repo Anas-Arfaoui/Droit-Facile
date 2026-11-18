@@ -6,7 +6,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { registerAccount } from "@/lib/auth-actions";
-import { loginUser } from "@/api/auth";
+import { loginUser, Role } from "@/api/auth";
+import { ApiError } from "@/api/client";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -33,6 +34,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState<Role>("CLIENT");
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -52,7 +54,7 @@ function AuthPage() {
     setMessage("");
     try {
       if (mode === "signup") {
-        const outcome = await registerAccount(email, password, name, window.location.origin);
+        const outcome = await registerAccount(email, password, name, window.location.origin, role);
         if (outcome === "confirm-email")
           setMessage(
             l({
@@ -76,6 +78,10 @@ function AuthPage() {
       }
     } catch (err) {
       const code = err && typeof err === "object" && "code" in err ? err.code : "";
+      if (err instanceof ApiError) {
+        setError(err.message);
+        return;
+      }
       setError(
         code === "email_not_confirmed"
           ? l({
@@ -132,6 +138,19 @@ function AuthPage() {
                 onChange={(e) => setName(e.target.value)}
                 className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3 outline-none focus:ring-2 focus:ring-ring"
               />
+            </label>
+          )}
+          {mode === "signup" && (
+            <label className="block text-sm font-medium">
+              Rôle
+              <select
+                value={role}
+                onChange={(event) => setRole(event.target.value as Role)}
+                className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3"
+              >
+                <option value="CLIENT">Client</option>
+                <option value="AVOCAT">Avocat</option>
+              </select>
             </label>
           )}
           <label className="block text-sm font-medium">
