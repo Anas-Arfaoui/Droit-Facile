@@ -3,7 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 
 export const summarizeContract = createServerFn({ method: "POST" })
-  .inputValidator((input: { name: string; text: string; lang: "fr" | "ar" }) => {
+  .validator((input: { name: string; text: string; lang: "fr" | "ar" }) => {
     if (!input.text?.trim()) throw new Error("Texte du contrat vide");
     return {
       name: String(input.name).slice(0, 200),
