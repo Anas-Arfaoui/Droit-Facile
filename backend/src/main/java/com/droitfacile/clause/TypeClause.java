@@ -1,0 +1,5 @@
+package com.droitfacile.clause;
+
+public enum TypeClause {
+    DUREE, PAIEMENT, RESILIATION, PENALITE, CONFIDENTIALITE, RESPONSABILITE, JURIDICTION, AUTRE
+}
