@@ -29,6 +29,9 @@ services:
       APP_JWT_EXPIRATION_MS: 86400000
       APP_ADMIN_EMAIL: admin@droitfacile.com
       APP_ADMIN_PASSWORD: Admin12345
+      APP_STORAGE_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -46,3 +49,4 @@ services:
 
 volumes:
   db_data:
+  uploads_data:
