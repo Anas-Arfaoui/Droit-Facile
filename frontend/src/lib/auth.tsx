@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 
-import { AUTH_CHANGED_EVENT, getCurrentUser } from "@/api/auth";
+import { AUTH_CHANGED_EVENT, getCurrentUser, type User } from "@/api/auth";
 import { clearAuthToken, getAuthToken } from "@/api/client";
 
 type AuthContextValue = {

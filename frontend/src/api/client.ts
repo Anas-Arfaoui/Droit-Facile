@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8081/api").replace(
+const API_BASE_URL = (import.meta.env["VITE_API_URL"] ?? "http://localhost:8081/api").replace(
   /\/$/,
   "",
 );
@@ -32,7 +32,9 @@ export function clearAuthToken(): void {
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
+  if (!(init.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   const token = getAuthToken();
 
@@ -63,4 +65,18 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   }
 
   return body as T;
+}
+
+export async function apiBlob(path: string, init: RequestInit = {}): Promise<Blob> {
+  const headers = new Headers(init.headers);
+  const token = getAuthToken();
+
+  if (token) headers.set("Authorization", "Bearer " + token);
+
+  const response = await fetch(API_BASE_URL + path, { ...init, headers });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new ApiError(message || "Request failed with status " + response.status, response.status);
+  }
+  return response.blob();
 }

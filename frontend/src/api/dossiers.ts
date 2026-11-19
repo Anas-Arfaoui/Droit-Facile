@@ -25,7 +25,7 @@ export type Seance = {
 
 export type CreateDossierRequest = {
   titre: string;
-  description?: string;
+  description?: string | undefined;
   clientId: number;
 };
 

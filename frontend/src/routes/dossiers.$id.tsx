@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ApiError } from "@/api/client";
+import { ContractPanel } from "@/components/ContractPanel";
 import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
 import {
@@ -356,7 +357,7 @@ function DossierPage() {
             </div>
           )}
 
-          {tab === "summary" && <Contracts contracts={contracts} setContracts={setContracts} />}
+          {tab === "summary" && <ContractPanel dossierId={d.id} />}
 
           {tab === "sharing" && (
             <div className="max-w-3xl space-y-4">
