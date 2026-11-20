@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ApiError } from "@/api/client";
 import { ContractPanel } from "@/components/ContractPanel";
+import { DocumentPanel } from "@/components/DocumentPanel";
 import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
 import {
@@ -361,6 +362,7 @@ function DossierPage() {
 
           {tab === "sharing" && (
             <div className="max-w-3xl space-y-4">
+               <DocumentPanel dossierId={d.id} />
               {contracts.map((c) => (
                 <div key={c.id} className="rounded-lg border border-border bg-card p-5">
                   <label className="flex items-center gap-3 text-sm">

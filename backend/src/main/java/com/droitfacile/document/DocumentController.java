@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.droitfacile.document.DocumentDtos.Response;
+
 @RestController
 @RequestMapping("/api")
 public class DocumentController {
@@ -29,7 +31,7 @@ public class DocumentController {
     }
 
     @PostMapping("/dossiers/{dossierId}/documents")
-    public ResponseEntity<Document> upload(
+    public ResponseEntity<Response> upload(
             @PathVariable Long dossierId,
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
@@ -37,11 +39,11 @@ public class DocumentController {
         Document document = documentService.upload(
                 dossierId, file, authentication.getName());
 
-        return ResponseEntity.ok(document);
+        return ResponseEntity.ok(Response.from(document));
     }
 
     @GetMapping("/dossiers/{dossierId}/documents")
-    public ResponseEntity<List<Document>> getDocuments(
+    public ResponseEntity<List<Response>> getDocuments(
             @PathVariable Long dossierId,
             Authentication authentication) {
 
