@@ -19,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+import com.droitfacile.document.DocumentDtos.Response;
+
 @Service
 public class DocumentService {
 
@@ -86,7 +88,7 @@ public class DocumentService {
         }
     }
 
-    public List<Document> getDocuments(Long dossierId, String email) {
+    public List<Response> getDocuments(Long dossierId, String email) {
 
         Dossier dossier = dossierRepository.findById(dossierId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dossier introuvable"));
@@ -96,7 +98,10 @@ public class DocumentService {
 
         verifierAcces(dossier, user);
 
-        return documentRepository.findByDossierIdOrderByEnvoyeLeDesc(dossierId);
+        return documentRepository.findByDossierIdOrderByEnvoyeLeDesc(dossierId)
+                .stream()
+                .map(Response::from)
+                .toList();
     }
 
     public Document getDocument(Long id, String email) {
