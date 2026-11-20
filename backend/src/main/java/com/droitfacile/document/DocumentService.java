@@ -153,4 +153,39 @@ public class DocumentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce dossier");
         }
     }
+
+    public List<DocumentDtos.Response> getSharedDocuments(String token) {
+    Dossier dossier = dossierRepository
+                .findByPartageTokenAndPartageActifTrue(token)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Lien de partage invalide"
+                ));
+
+        return documentRepository
+                .findByDossierIdOrderByEnvoyeLeDesc(dossier.getId())
+                .stream()
+                .map(DocumentDtos.Response::from)
+                .toList();
+    }
+
+    public Document getSharedDocument(Long id, String token) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Document introuvable"
+                ));
+
+        Dossier dossier = document.getDossier();
+
+        if (!dossier.isPartageActif()
+                || !token.equals(dossier.getPartageToken())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Document non partagé"
+            );
+        }
+
+        return document;
+    }
 }

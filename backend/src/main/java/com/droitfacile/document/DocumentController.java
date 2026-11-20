@@ -88,4 +88,37 @@ public class DocumentController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/dossiers/partage/{token}/documents")
+    public ResponseEntity<List<DocumentDtos.Response>> sharedDocuments(
+            @PathVariable String token) {
+
+        return ResponseEntity.ok(
+                documentService.getSharedDocuments(token));
+    }
+
+    @GetMapping("/documents/partage/{token}/{id}/download")
+    public ResponseEntity<Resource> sharedDownload(
+                @PathVariable String token,
+                @PathVariable Long id) throws Exception {
+                        Document document = documentService.getSharedDocument(id, token);
+                        Path path = Paths.get(storageDir)
+                                                .toAbsolutePath()
+                                                .normalize()
+                                                .resolve(document.getNomStocke())
+                                                .normalize();
+                        Resource resource = new UrlResource(path.toUri());
+                        if (!resource.exists()||!resource.isReadable()){
+                                return ResponseEntity.notFound().build();
+                        }
+                        String contentType = document.getTypeFichier() != null
+                                                ? document.getTypeFichier()
+                                                : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                        return ResponseEntity.ok()
+                                                .contentType(MediaType.parseMediaType(contentType))
+                                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                        "attachment; filename=\"" + document.getNomFichier() + "\"")
+                                                .body(resource);
+        }
+
 }

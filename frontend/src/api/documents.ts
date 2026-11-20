@@ -14,10 +14,7 @@ export async function listDocuments(dossierId: number): Promise<DocumentFile[]> 
   return apiRequest<DocumentFile[]>(`/dossiers/${dossierId}/documents`);
 }
 
-export async function uploadDocument(
-  dossierId: number,
-  file: File,
-): Promise<DocumentFile> {
+export async function uploadDocument(dossierId: number, file: File): Promise<DocumentFile> {
   const form = new FormData();
   form.append("file", file);
 
@@ -35,4 +32,12 @@ export async function deleteDocument(id: number): Promise<void> {
   await apiRequest<void>(`/documents/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function listSharedDocuments(token: string): Promise<DocumentFile[]> {
+  return apiRequest<DocumentFile[]>(`/dossiers/partage/${token}/documents`);
+}
+
+export async function downloadSharedDocument(token: string, id: number): Promise<Blob> {
+  return apiBlob(`/documents/partage/${token}/${id}/download`);
 }
