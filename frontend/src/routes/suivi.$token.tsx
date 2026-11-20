@@ -4,11 +4,17 @@ import { getSharedDossier } from "@/api/dossiers";
 import { ApiError } from "@/api/client";
 import { LangSwitch } from "@/components/AppHeader";
 import { useI18n } from "@/lib/i18n";
+import { downloadSharedDocument, listSharedDocuments } from "@/api/documents";
 
 export const Route = createFileRoute("/suivi/$token")({
   loader: async ({ params }) => {
     try {
-      return await getSharedDossier(params.token);
+      const [dossier, documents] = await Promise.all([
+        getSharedDossier(params.token),
+        listSharedDocuments(params.token),
+      ]);
+
+      return { dossier, documents };
     } catch (error) {
       if (error instanceof ApiError && error.status === 404) {
         throw notFound();
@@ -30,7 +36,8 @@ export const Route = createFileRoute("/suivi/$token")({
 });
 
 function Suivi() {
-  const dossier = Route.useLoaderData();
+  const { dossier, documents } = Route.useLoaderData();
+  const { token } = Route.useParams();
   const { t } = useI18n();
 
   const steps = ["OUVERT", "EN_COURS", "EN_ATTENTE", "CLOTURE"];
@@ -82,16 +89,39 @@ function Suivi() {
 
         <h2 className="mt-10 text-xl">{t("sharedDocs")}</h2>
 
-        <div className="mt-4 rounded-lg border border-border bg-card p-5">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <FileText className="h-4 w-4" />
-            {dossier.titre}
-          </p>
-
-          {dossier.description ? (
-            <p className="mt-3 text-sm leading-relaxed">{dossier.description}</p>
+        <div className="mt-4 space-y-3">
+          {documents.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground">{t("nothingShared")}</p>
+            </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">{t("nothingShared")}</p>
+            documents.map((document) => (
+              <article
+                key={document.id}
+                className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
+              >
+                <FileText className="h-5 w-5" />
+                <div className="flex-1">
+                  <p className="font-medium">{document.nomFichier}</p>
+                  <p className="text-xs text-muted-foreground">{document.envoyeurNom}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const blob = await downloadSharedDocument(token, document.id);
+                    const url = URL.createObjectURL(blob);
+                    const link = window.document.createElement("a");
+                    link.href = url;
+                    link.download = document.nomFichier;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="text-sm underline"
+                >
+                  Télécharger
+                </button>
+              </article>
+            ))
           )}
         </div>
       </main>
