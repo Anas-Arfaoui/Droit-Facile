@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ApiError } from "@/api/client";
 import { ContractPanel } from "@/components/ContractPanel";
+import { EcheancePanel } from "@/components/EcheancePanel";
 import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
@@ -252,6 +253,8 @@ function DossierPage() {
             ))}
           </div>
         </div>
+
+        <EcheancePanel dossierId={d.id} />
 
         <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-border">
           {visibleTabs.map((k) => (
