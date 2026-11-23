@@ -21,14 +21,14 @@ public class ClauseController {
 
     /** Lance (ou relance) l'analyse IA du contrat. */
     @PostMapping("/{id}/analyse")
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public Analyse analyser(@PathVariable Long id, Authentication auth) {
         return service.analyser(id, auth.getName());
     }
 
     /** Dernieres clauses extraites pour ce contrat. */
     @GetMapping("/{id}/clauses")
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public Analyse clauses(@PathVariable Long id, Authentication auth) {
         return service.lister(id, auth.getName());
     }

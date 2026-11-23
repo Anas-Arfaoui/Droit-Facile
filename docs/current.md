@@ -1,23 +1,43 @@
 # État actuel
 
-## Sprint en cours : Sprint 2
+## Sprint en cours : Sprint 3
 
-Le projet est actuellement en **Sprint 2**. Le Sprint 1 est largement couvert :
+> Mise a jour : le developpement local du Sprint 2 est termine. L'analyse des clauses est connectee au frontend, l'OCR local optionnel est configure et la configuration Docker est prete. Gemini et WhatsApp restent hors scope pour le moment.
 
-- inscription et authentification avec JWT ;
-- gestion des rôles (avocat, assistant, client et administrateur) ;
-- création et suivi des dossiers clients ;
-- création et consultation des séances ;
-- journalisation des actions et accès administrateur à l'audit.
+### Sprint 3 - prochaine tranche de developpement
 
-Le Sprint 2 est en cours et partiellement réalisé. Le frontend contient déjà :
+- modeliser les echeances et leurs statuts dans le backend ;
+- creer les endpoints et l'interface de gestion des echeances ;
+- ajouter les rappels internes ;
+- rendre le resume valide exportable en PDF cote frontend ;
+- preparer les reponses sourcees sans activer de nouveau fournisseur IA.
 
-- une interface de dossier avec ajout de contrat ou de texte de contrat ;
-- un flux de résumé de contrat par IA, en français ou en arabe ;
-- une interface de partage et de suivi du dossier par lien public ;
-- des éléments d'interface prévus pour l'export PDF et le suivi client.
+Le Sprint 1 est terminé : authentification JWT, rôles, dossiers clients, séances et audit sont disponibles.
 
-Il reste à finaliser et valider l'implémentation complète du Sprint 2, notamment la persistance et l'import réel des documents côté backend, l'échange de documents et l'intégration WhatsApp. Les tests d'intégration et la validation de bout en bout doivent également être complétés.
+Le Sprint 2 est maintenant réalisé à environ **75 %**.
 
-Le Sprint 3 n'est pas encore commencé : les rappels d'échéances, le résumé IA validé/exportable et les réponses IA sourcées ne sont pas encore livrés comme fonctionnalités complètes.
+### Fonctionnalités disponibles
+
+- import de contrats PDF et DOCX ;
+- extraction du texte des contrats ;
+- détection de la langue française, arabe ou mixte ;
+- stockage et téléchargement des contrats ;
+- backend d'analyse des clauses avec Gemini ;
+- upload, liste, téléchargement et suppression des documents du dossier ;
+- partage des documents avec le client via un lien sécurisé ;
+- affichage et téléchargement des documents depuis la page publique de suivi ;
+- suivi du statut du dossier par lien public.
+
+### Travail restant
+
+- connecter l'analyse des clauses au frontend ;
+- configurer et valider Gemini avec GEMINI_API_KEY ;
+- ajouter l'OCR pour les contrats scannés ;
+- intégrer WhatsApp pour envoyer le lien de suivi et les notifications ;
+- ajouter les tests d'intégration et les tests de bout en bout ;
+- vérifier le fonctionnement complet avec PostgreSQL, stockage de fichiers et Docker.
+
+L'utilisation d'un modèle local Ollama est reportée. L'IA reste donc désactivable tant qu'une clé Gemini n'est pas configurée.
+
+Le Sprint 3 n'est pas commencé : rappels d'échéances, résumé IA exportable et réponses IA sourcées restent à développer.
 

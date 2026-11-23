@@ -9,6 +9,7 @@ import {
   uploadContract,
   type Contract,
 } from "@/api/contracts";
+import { analyzeContract, listClauses, type Clause, type RiskLevel } from "@/api/clauses";
 import { useI18n } from "@/lib/i18n";
 
 export function ContractPanel({ dossierId }: { dossierId: number }) {
@@ -25,6 +26,14 @@ export function ContractPanel({ dossierId }: { dossierId: number }) {
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<number | null>(null);
   const [texts, setTexts] = useState<Record<number, string>>({});
+  const [analysisId, setAnalysisId] = useState<number | null>(null);
+  const [analysisBusy, setAnalysisBusy] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
+  const analysisQuery = useQuery({
+    queryKey: ["contract-clauses", analysisId],
+    queryFn: () => listClauses(analysisId as number),
+    enabled: analysisId !== null,
+  });
 
   if (!isAvocat) return null;
 
@@ -70,6 +79,29 @@ export function ContractPanel({ dossierId }: { dossierId: number }) {
     } catch {
       setError("Le fichier n'a pas pu être téléchargé.");
     }
+  }
+
+  async function analyze(contract: Contract) {
+    if (analysisBusy || contract.ocrNecessaire) return;
+    setAnalysisId(contract.id);
+    setAnalysisBusy(true);
+    setAnalysisError("");
+    try {
+      await analyzeContract(contract.id);
+      await analysisQuery.refetch();
+    } catch (cause) {
+      setAnalysisError(cause instanceof Error ? cause.message : "Analyse impossible.");
+    } finally {
+      setAnalysisBusy(false);
+    }
+  }
+
+  function riskClass(level: RiskLevel) {
+    return level === "ELEVE"
+      ? "bg-destructive/15 text-destructive"
+      : level === "MOYEN"
+        ? "bg-amber-500/15 text-amber-700"
+        : "bg-success/15 text-success";
   }
 
   return (
@@ -121,9 +153,7 @@ export function ContractPanel({ dossierId }: { dossierId: number }) {
             {contract.nombreCaracteres} caractères extraits
           </p>
           {contract.ocrNecessaire && (
-            <p className="mt-2 text-sm text-amber-700">
-              OCR nécessaire pour ce document scanné.
-            </p>
+            <p className="mt-2 text-sm text-amber-700">OCR nécessaire pour ce document scanné.</p>
           )}
           {openId === contract.id && (
             <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-md bg-muted p-3 text-sm">
@@ -140,14 +170,80 @@ export function ContractPanel({ dossierId }: { dossierId: number }) {
             </button>
             <button
               type="button"
+              onClick={() => void analyze(contract)}
+              disabled={analysisBusy || contract.ocrNecessaire}
+              className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            >
+              {analysisBusy && analysisId === contract.id ? "Analyse..." : "Analyser les clauses"}
+            </button>
+            <button
+              type="button"
               onClick={() => void download(contract)}
               className="rounded-md border border-input px-3 py-1.5 text-sm"
             >
               Télécharger
             </button>
           </div>
+          {analysisId === contract.id && (
+            <div className="mt-4 space-y-3 border-t border-border pt-4">
+              {analysisError && <p className="text-sm text-destructive">{analysisError}</p>}
+              {analysisQuery.isLoading && (
+                <p className="text-sm text-muted-foreground">Chargement de l'analyse...</p>
+              )}
+              {analysisQuery.data && (
+                <>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-muted px-2.5 py-1">
+                      {analysisQuery.data.nombreClauses} clause(s)
+                    </span>
+                    <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-destructive">
+                      {analysisQuery.data.nombreARisqueEleve} risque(s) élevé(s)
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {analysisQuery.data.avertissement}
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {analysisQuery.data.clauses.map((clause) => (
+                      <ClauseCard key={clause.id} clause={clause} riskClass={riskClass} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </article>
       ))}
     </div>
+  );
+}
+
+function ClauseCard({
+  clause,
+  riskClass,
+}: {
+  clause: Clause;
+  riskClass: (level: RiskLevel) => string;
+}) {
+  return (
+    <article className="rounded-md border border-border p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs uppercase text-muted-foreground">{clause.type}</p>
+          <h4 className="font-medium">{clause.titre}</h4>
+        </div>
+        <span className={`rounded-full px-2 py-0.5 text-xs ${riskClass(clause.niveauRisque)}`}>
+          {clause.niveauRisque}
+        </span>
+      </div>
+      <p className="mt-2 text-sm italic text-muted-foreground">{clause.extrait}</p>
+      <p className="mt-2 text-sm">{clause.explication}</p>
+      {clause.motifRisque && (
+        <p className="mt-2 text-xs text-muted-foreground">{clause.motifRisque}</p>
+      )}
+      {!clause.extraitVerifie && (
+        <p className="mt-2 text-xs text-destructive">Extrait non retrouvé automatiquement.</p>
+      )}
+    </article>
   );
 }
