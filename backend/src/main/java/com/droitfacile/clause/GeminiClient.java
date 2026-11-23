@@ -16,28 +16,39 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** Appelle l'API Gemini (generateContent) et renvoie le texte JSON genere. */
 @Component
 public class GeminiClient {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiClient.class);
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+    private static final String MODELE_PAR_DEFAUT = "gemini-3.6-flash";
+    private static final int MAX_TENTATIVES = 3;
 
     private final ObjectMapper mapper;
     private final RestClient restClient;
     private final String apiKey;
-    private final String modele;
+    private final List<String> modeles = new ArrayList<>();
 
     public GeminiClient(ObjectMapper mapper,
                         @Value("${GEMINI_API_KEY:}") String apiKey,
-                        @Value("${GEMINI_MODEL:gemini-3.8-flash}") String modele) {
+                        @Value("${GEMINI_MODEL:" + MODELE_PAR_DEFAUT + "}") String modele,
+                        @Value("${GEMINI_FALLBACK_MODEL:gemini-3.5-flash-lite}") String modeleSecours) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(10_000);
-        factory.setReadTimeout(180_000);
+        factory.setReadTimeout(120_000);
         this.mapper = mapper;
         this.restClient = RestClient.builder().requestFactory(factory).build();
         this.apiKey = apiKey == null ? "" : apiKey.trim();
-        this.modele = modele;
+
+        String principal = (modele == null || modele.isBlank()) ? MODELE_PAR_DEFAUT : modele.trim();
+        modeles.add(principal);
+        if (modeleSecours != null && !modeleSecours.isBlank() && !modeleSecours.trim().equals(principal)) {
+            modeles.add(modeleSecours.trim());
+        }
     }
 
     /** Envoie une instruction + un prompt et force la reponse a respecter le schema JSON donne. */
@@ -48,23 +59,61 @@ public class GeminiClient {
         }
 
         String corps = construireCorps(instruction, prompt, schemaJson);
-        String reponse;
-        try {
-            reponse = restClient.post()
-                    .uri(BASE_URL + "/models/" + modele + ":generateContent")
-                    .header("x-goog-api-key", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(corps)
-                    .retrieve()
-                    .body(String.class);
-        } catch (RestClientResponseException e) {
-            throw traduire(e);
-        } catch (RestClientException e) {
-            log.warn("Appel Gemini impossible : {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT,
-                    "Gemini ne repond pas (reseau ou delai depasse)");
+        RestClientResponseException derniereErreur = null;
+        String dernierModele = modeles.get(0);
+
+        for (String modele : modeles) {
+            dernierModele = modele;
+            try {
+                return extraireTexte(appelerAvecRetentatives(corps, modele));
+            } catch (RestClientResponseException e) {
+                derniereErreur = e;
+                log.warn("Modele {} indisponible apres {} essais", modele, MAX_TENTATIVES);
+            }
         }
-        return extraireTexte(reponse);
+        throw traduire(derniereErreur, dernierModele);
+    }
+
+    private String appelerAvecRetentatives(String corps, String modele) {
+        for (int tentative = 1; ; tentative++) {
+            try {
+                return restClient.post()
+                        .uri(BASE_URL + "/models/" + modele + ":generateContent")
+                        .header("x-goog-api-key", apiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(corps)
+                        .retrieve()
+                        .body(String.class);
+            } catch (RestClientResponseException e) {
+                if (!estTemporaire(e)) {
+                    throw traduire(e, modele);
+                }
+                if (tentative >= MAX_TENTATIVES) {
+                    throw e;
+                }
+                log.warn("Gemini {} temporairement indisponible ({}), nouvel essai {}/{}",
+                        modele, e.getStatusCode().value(), tentative, MAX_TENTATIVES - 1);
+                pause(2_000L * tentative);
+            } catch (RestClientException e) {
+                log.warn("Appel Gemini impossible : {}", e.getMessage());
+                throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT,
+                        "Gemini ne repond pas (reseau ou delai depasse)");
+            }
+        }
+    }
+
+    private boolean estTemporaire(RestClientResponseException e) {
+        int code = e.getStatusCode().value();
+        return code == 500 || code == 502 || code == 503 || code == 504;
+    }
+
+    private void pause(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Analyse interrompue");
+        }
     }
 
     private String construireCorps(String instruction, String prompt, String schemaJson) {
@@ -105,10 +154,10 @@ public class GeminiClient {
         }
     }
 
-    private ResponseStatusException traduire(RestClientResponseException e) {
+    private ResponseStatusException traduire(RestClientResponseException e, String modele) {
         int code = e.getStatusCode().value();
         String detail = abreger(e.getResponseBodyAsString(), 300);
-        log.warn("Erreur Gemini {} : {}", code, detail);
+        log.warn("Erreur Gemini {} (modele {}) : {}", code, modele, detail);
         return switch (code) {
             case 429 -> new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
                     "Quota Gemini atteint : reessaie dans une minute");
@@ -116,6 +165,8 @@ public class GeminiClient {
                     "Gemini a refuse la requete (" + code + ") : " + detail);
             case 404 -> new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Modele Gemini introuvable : verifie la variable GEMINI_MODEL (" + modele + ")");
+            case 500, 502, 503, 504 -> new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Gemini est temporairement surcharge (" + code + ") : reessaie dans quelques instants");
             default -> new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Erreur du service Gemini (" + code + ")");
         };

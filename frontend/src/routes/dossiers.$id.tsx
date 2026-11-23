@@ -4,10 +4,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ApiError } from "@/api/client";
 import { ContractPanel } from "@/components/ContractPanel";
+import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
-import { ArrowLeft, BookOpen, Check, Copy, FileText, Loader2, Send, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Check,
+  Copy,
+  FileText,
+  Loader2,
+  Send,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { cannedAnswers, fallbackAnswer, summary, type Answer } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n";
@@ -255,7 +266,7 @@ function DossierPage() {
         </nav>
 
         <section className="py-6">
-          {tab === "analysis" && <ContractPanel dossierId={d.id} />}
+          {tab === "analysis" && <AnalysisPanel dossierId={d.id} />}
 
           {tab === "chat" && <Chat />}
 
@@ -286,6 +297,8 @@ function DossierPage() {
               </div>
             </div>
           )}
+
+          {tab === "summary" && <ContractPanel dossierId={d.id} />}
 
           {tab === "sharing" && (
             <div className="max-w-3xl space-y-4">
