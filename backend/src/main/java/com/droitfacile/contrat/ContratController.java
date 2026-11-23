@@ -30,7 +30,7 @@ public class ContratController {
     }
 
     @PostMapping(value = "/dossiers/{dossierId}/contrats", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public ResponseEntity<Response> importer(@PathVariable Long dossierId,
                                              @RequestParam("file") MultipartFile file,
                                              Authentication auth) {
@@ -38,19 +38,19 @@ public class ContratController {
     }
 
     @GetMapping("/dossiers/{dossierId}/contrats")
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public List<Response> lister(@PathVariable Long dossierId, Authentication auth) {
         return service.lister(dossierId, auth.getName());
     }
 
     @GetMapping("/contrats/{id}")
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public Detail detail(@PathVariable Long id, Authentication auth) {
         return service.detail(id, auth.getName());
     }
 
     @GetMapping("/contrats/{id}/fichier")
-    @PreAuthorize("hasRole('AVOCAT')")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
     public ResponseEntity<Resource> fichier(@PathVariable Long id, Authentication auth) {
         Contrat c = service.getOwned(id, auth.getName());
         MediaType type = "pdf".equals(c.getTypeFichier()) ? MediaType.APPLICATION_PDF : DOCX;

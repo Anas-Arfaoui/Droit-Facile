@@ -10,6 +10,10 @@ spring:
     open-in-view: false
 
 app:
+  ocr:
+    enabled: ${APP_OCR_ENABLED:false}
+    command: ${APP_OCR_COMMAND:tesseract}
+    languages: ${APP_OCR_LANGUAGES:fra+ara}
   jwt:
     secret: change-me-change-me-change-me-change-me-123456
     expiration-ms: 86400000

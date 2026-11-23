@@ -30,6 +30,7 @@ services:
       APP_ADMIN_EMAIL: admin@droitfacile.com
       APP_ADMIN_PASSWORD: Admin12345
       APP_STORAGE_DIR: /data/uploads
+      APP_OCR_ENABLED: ${APP_OCR_ENABLED:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - uploads_data:/data/uploads

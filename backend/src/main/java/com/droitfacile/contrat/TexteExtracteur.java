@@ -14,6 +14,12 @@ import java.io.IOException;
 @Component
 public class TexteExtracteur {
 
+    private final OcrService ocrService;
+
+    public TexteExtracteur(OcrService ocrService) {
+        this.ocrService = ocrService;
+    }
+
     public String extraire(byte[] octets, String extension) throws IOException {
         String texte = switch (extension) {
             case "pdf" -> lirePdf(octets);
@@ -21,7 +27,11 @@ public class TexteExtracteur {
             default -> throw new IllegalArgumentException("Format non supporte : " + extension);
         };
         // PostgreSQL refuse le caractere NUL dans un champ texte
-        return texte.replace("\u0000", "").strip();
+        texte = texte.replace("\u0000", "").strip();
+        if (texte.isBlank() && extension.equals("pdf")) {
+            texte = ocrService.extrairePdf(octets);
+        }
+        return texte;
     }
 
     private String lirePdf(byte[] octets) throws IOException {

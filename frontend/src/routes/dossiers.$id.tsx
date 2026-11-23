@@ -7,19 +7,9 @@ import { ContractPanel } from "@/components/ContractPanel";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
-import {
-  ArrowLeft,
-  BookOpen,
-  Check,
-  Copy,
-  FileText,
-  Loader2,
-  Send,
-  Sparkles,
-  Upload,
-} from "lucide-react";
-import { AppHeader, LevelBadge } from "@/components/AppHeader";
-import { cannedAnswers, clauses, fallbackAnswer, summary, type Answer } from "@/lib/demo-data";
+import { ArrowLeft, BookOpen, Check, Copy, FileText, Loader2, Send, Sparkles } from "lucide-react";
+import { AppHeader } from "@/components/AppHeader";
+import { cannedAnswers, fallbackAnswer, summary, type Answer } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
@@ -106,7 +96,6 @@ function DossierPage() {
   const [sessionBusy, setSessionBusy] = useState(false);
   const [sessionError, setSessionError] = useState("");
   const [tab, setTab] = useState<Tab>("analysis");
-  const [state, setState] = useState<"idle" | "loading" | "done">(d.step >= 2 ? "done" : "idle");
   const [validated, setValidated] = useState(d.step >= 3);
   const [shared, setShared] = useState(d.step >= 3);
   const [shareToken, setShareToken] = useState(d.partageToken ?? null);
@@ -115,10 +104,6 @@ function DossierPage() {
 
   const [contracts, setContracts] = useState<NewContract[]>([]);
 
-  const run = () => {
-    setState("loading");
-    setTimeout(() => setState("done"), 1800);
-  };
   async function handleCreateSeance(event: React.FormEvent) {
     event.preventDefault();
 
@@ -270,63 +255,7 @@ function DossierPage() {
         </nav>
 
         <section className="py-6">
-          {tab === "analysis" && (
-            <div>
-              {state !== "done" ? (
-                <div className="rounded-lg border-2 border-dashed border-border bg-card p-10 text-center">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 font-medium">{t("upload")}</p>
-                  <p className="text-sm text-muted-foreground">{d.contract || "contrat.pdf"}</p>
-                  <button
-                    onClick={run}
-                    disabled={state === "loading"}
-                    className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-70"
-                  >
-                    {state === "loading" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    {state === "loading" ? t("analyzing") : t("analyze")}
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
-                    <FileText className="h-4 w-4 text-muted-foreground" />{" "}
-                    {d.contract || "contrat.pdf"}
-                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs">
-                      {t("draft")}
-                    </span>
-                    <span className="ms-auto flex gap-2">
-                      {(["risk", "warn", "ok"] as const).map((lv) => (
-                        <span key={lv} className="flex items-center gap-1">
-                          <LevelBadge level={lv} /> {clauses.filter((c) => c.level === lv).length}
-                        </span>
-                      ))}
-                    </span>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {clauses.map((c, i) => (
-                      <article key={i} className="rounded-lg border border-border bg-card p-4">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="text-lg">
-                            {i + 1}. {l(c.title)}
-                          </h3>
-                          <LevelBadge level={c.level} />
-                        </div>
-                        <p className="mt-2 text-sm italic text-muted-foreground">{l(c.excerpt)}</p>
-                        <p className="mt-2 text-sm">{l(c.note)}</p>
-                        <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
-                          <BookOpen className="h-3 w-3" /> {c.law}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {tab === "analysis" && <ContractPanel dossierId={d.id} />}
 
           {tab === "chat" && <Chat />}
 
@@ -358,11 +287,9 @@ function DossierPage() {
             </div>
           )}
 
-          {tab === "summary" && <ContractPanel dossierId={d.id} />}
-
           {tab === "sharing" && (
             <div className="max-w-3xl space-y-4">
-               <DocumentPanel dossierId={d.id} />
+              <DocumentPanel dossierId={d.id} />
               {contracts.map((c) => (
                 <div key={c.id} className="rounded-lg border border-border bg-card p-5">
                   <label className="flex items-center gap-3 text-sm">
