@@ -6,17 +6,17 @@ import {
   createEcheance,
   deleteEcheance,
   listEcheances,
+  updateEcheance,
   updateEcheanceStatus,
+  type Echeance,
   type EcheanceStatus,
 } from "@/api/echeances";
-
 const statusLabels: Record<EcheanceStatus, string> = {
   A_VENIR: "À venir",
   EN_COURS: "En cours",
   TERMINEE: "Terminée",
   ANNULEE: "Annulée",
 };
-
 export function EcheancePanel({ dossierId }: { dossierId: number }) {
   const { user } = useAuth();
   const isAvocat = user?.role === "AVOCAT" || user?.role === "ADMIN";
@@ -32,6 +32,12 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
   const [rappelJoursAvant, setRappelJoursAvant] = useState("7");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitre, setEditTitre] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editRappel, setEditRappel] = useState("7");
+  const [editStatut, setEditStatut] = useState<EcheanceStatus>("A_VENIR");
 
   async function refresh() {
     await echeancesQuery.refetch();
@@ -96,6 +102,43 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
       await refresh();
     } catch {
       setError("Impossible de supprimer l'échéance.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startEditing(echeance: Echeance) {
+    setEditingId(echeance.id);
+    setEditTitre(echeance.titre);
+    setEditDescription(echeance.description ?? "");
+    setEditDate(echeance.dateEcheance);
+    setEditRappel(String(echeance.rappelJoursAvant));
+    setEditStatut(echeance.statut);
+    setError("");
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+  }
+
+  async function saveEditing(event: React.FormEvent) {
+    event.preventDefault();
+    if (editingId === null || !editTitre.trim() || !editDate || busy) return;
+
+    setBusy(true);
+    setError("");
+    try {
+      await updateEcheance(editingId, {
+        titre: editTitre.trim(),
+        description: editDescription.trim() || undefined,
+        dateEcheance: editDate,
+        rappelJoursAvant: Number(editRappel),
+        statut: editStatut,
+      });
+      setEditingId(null);
+      await refresh();
+    } catch {
+      setError("Impossible de modifier l'échéance.");
     } finally {
       setBusy(false);
     }
@@ -244,6 +287,15 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
 
                 <button
                   type="button"
+                  onClick={() => startEditing(echeance)}
+                  disabled={busy}
+                  className="rounded-md border border-input px-3 py-1.5 text-sm"
+                >
+                  Modifier
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => void remove(echeance.id)}
                   disabled={busy}
                   className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-destructive"
@@ -252,6 +304,71 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
                   Supprimer
                 </button>
               </div>
+            )}
+
+            {editingId === echeance.id && (
+              <form
+                onSubmit={saveEditing}
+                className="mt-4 space-y-3 rounded-md border border-border p-4"
+              >
+                <input
+                  required
+                  value={editTitre}
+                  onChange={(event) => setEditTitre(event.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                />
+                <textarea
+                  value={editDescription}
+                  onChange={(event) => setEditDescription(event.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                />
+                <div className="grid gap-3 md:grid-cols-3">
+                  <input
+                    required
+                    type="date"
+                    value={editDate}
+                    onChange={(event) => setEditDate(event.target.value)}
+                    className="rounded-md border border-input bg-background px-3 py-2"
+                  />
+                  <input
+                    required
+                    min={0}
+                    max={365}
+                    type="number"
+                    value={editRappel}
+                    onChange={(event) => setEditRappel(event.target.value)}
+                    className="rounded-md border border-input bg-background px-3 py-2"
+                  />
+                  <select
+                    value={editStatut}
+                    onChange={(event) => setEditStatut(event.target.value as EcheanceStatus)}
+                    className="rounded-md border border-input bg-background px-3 py-2"
+                  >
+                    <option value="A_VENIR">À venir</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="TERMINEE">Terminée</option>
+                    <option value="ANNULEE">Annulée</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    disabled={busy}
+                    className="rounded-md border border-input px-3 py-1.5 text-sm"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
             )}
           </article>
         ))}
