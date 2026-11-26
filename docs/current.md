@@ -4,6 +4,29 @@
 
 > Mise a jour : le developpement local du Sprint 2 est termine. L'analyse des clauses est connectee au frontend, l'OCR local optionnel est configure et la configuration Docker est prete. Gemini et WhatsApp restent hors scope pour le moment.
 
+### Etat de livraison au 26 novembre 2026
+
+#### Sprint 3 termine pour la partie developpement local
+
+- echeances persistantes liees aux dossiers ;
+- creation, lecture, modification, changement de statut et suppression des echeances ;
+- acces en lecture pour le client et gestion reservee a l'avocat ;
+- panneau frontend des echeances dans la page dossier ;
+- modification des titres, descriptions, dates, rappels et statuts ;
+- endpoint backend des rappels a venir et echeances en retard ;
+- execution et compilation validees avec Docker Compose, PostgreSQL et Spring Boot ;
+- tests frontend et build de production valides.
+
+#### Travail restant
+
+- afficher les rappels sur le tableau de bord frontend ;
+- ajouter une tache planifiee pour traiter automatiquement les rappels ;
+- choisir un canal de notification interne ou e-mail ;
+- remplacer l'impression navigateur par un vrai export PDF telechargeable ;
+- ajouter les tests backend d'integration et les tests end-to-end ;
+- configurer Gemini pour les resumes et reponses IA sour dees ;
+- integrer WhatsApp pour les notifications et les liens de suivi.
+
 ### Sprint 3 - prochaine tranche de developpement
 
 - modeliser les echeances et leurs statuts dans le backend ;
@@ -28,7 +51,7 @@ Le Sprint 2 est maintenant réalisé à environ **75 %**.
 - affichage et téléchargement des documents depuis la page publique de suivi ;
 - suivi du statut du dossier par lien public.
 
-### Travail restant
+### Historique du Sprint 2 avant les derniers travaux
 
 - connecter l'analyse des clauses au frontend ;
 - configurer et valider Gemini avec GEMINI_API_KEY ;

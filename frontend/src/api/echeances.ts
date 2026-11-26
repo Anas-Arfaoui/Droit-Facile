@@ -59,3 +59,19 @@ export async function deleteEcheance(id: number): Promise<void> {
     method: "DELETE",
   });
 }
+export type DeadlineReminder = {
+  id: number;
+  dossierId: number;
+  dossierTitre: string;
+  clientNom: string;
+  titre: string;
+  description: string | null;
+  dateEcheance: string;
+  rappelJoursAvant: number;
+  statut: EcheanceStatus;
+  enRetard: boolean;
+};
+
+export function listReminders(jours = 30): Promise<DeadlineReminder[]> {
+  return apiRequest<DeadlineReminder[]>(`/echeances/rappels?jours=${jours}`);
+}
