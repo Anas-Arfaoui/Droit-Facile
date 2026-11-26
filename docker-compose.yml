@@ -32,6 +32,7 @@ services:
       APP_STORAGE_DIR: /data/uploads
       APP_OCR_ENABLED: ${APP_OCR_ENABLED:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      APP_WHATSAPP_ENABLED: ${APP_WHATSAPP_ENABLED:-false}
     volumes:
       - uploads_data:/data/uploads
     depends_on:

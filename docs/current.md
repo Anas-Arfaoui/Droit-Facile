@@ -2,7 +2,7 @@
 
 ## Sprint en cours : Sprint 3
 
-> Mise a jour : le developpement local du Sprint 2 est termine. L'analyse des clauses est connectee au frontend, l'OCR local optionnel est configure et la configuration Docker est prete. Gemini et WhatsApp restent hors scope pour le moment.
+> Mise a jour : les travaux de developpement des Sprints 1, 2 et 3 sont termines. WhatsApp et les fonctionnalites IA avancees restent hors perimetre.
 
 ### Etat de livraison au 26 novembre 2026
 
@@ -17,17 +17,13 @@
 - execution et compilation validees avec Docker Compose, PostgreSQL et Spring Boot ;
 - tests frontend et build de production valides.
 
-#### Travail restant
+#### Hors perimetre actuel
 
-- afficher les rappels sur le tableau de bord frontend ;
-- ajouter une tache planifiee pour traiter automatiquement les rappels ;
-- choisir un canal de notification interne ou e-mail ;
-- remplacer l'impression navigateur par un vrai export PDF telechargeable ;
-- ajouter les tests backend d'integration et les tests end-to-end ;
-- configurer Gemini pour les resumes et reponses IA sour dees ;
-- integrer WhatsApp pour les notifications et les liens de suivi.
+- integrer WhatsApp Cloud API pour les notifications et les liens de suivi ;
+- ajouter les resumes IA et les reponses IA sourcees ;
+- email SMTP optionnel, retire du code comme demande.
 
-### Sprint 3 - prochaine tranche de developpement
+### Sprint 3 - developpement livre
 
 - modeliser les echeances et leurs statuts dans le backend ;
 - creer les endpoints et l'interface de gestion des echeances ;
@@ -37,7 +33,7 @@
 
 Le Sprint 1 est terminé : authentification JWT, rôles, dossiers clients, séances et audit sont disponibles.
 
-Le Sprint 2 est maintenant réalisé à environ **75 %**.
+Le Sprint 2 est termine pour les fonctionnalites de developpement prevues.
 
 ### Fonctionnalités disponibles
 
@@ -62,7 +58,7 @@ Le Sprint 2 est maintenant réalisé à environ **75 %**.
 
 L'utilisation d'un modèle local Ollama est reportée. L'IA reste donc désactivable tant qu'une clé Gemini n'est pas configurée.
 
-Le Sprint 3 n'est pas commencé : rappels d'échéances, résumé IA exportable et réponses IA sourcées restent à développer.
+Le Sprint 3 est termine pour la partie developpement local : echeances, rappels planifies, notifications internes, export PDF et tests automatises sont livres.
 
 
 ## Mise à jour du 26 novembre 2026
