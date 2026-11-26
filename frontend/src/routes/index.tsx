@@ -9,6 +9,8 @@ import { listClients } from "@/api/users";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { ReminderPanel } from "@/components/ReminderPanel";
+import { AdminDashboardPanel } from "@/components/AdminDashboardPanel";
+import { NotificationPanel } from "@/components/NotificationPanel";
 
 const PROGRESS_STEPS = 4;
 
@@ -49,7 +51,7 @@ function Index() {
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
 
-  const canCreate = user?.role === "AVOCAT" || user?.role === "ADMIN";
+  const canCreate = user?.role === "AVOCAT";
   const [q, setQ] = useState("");
 
   const dossiersQuery = useQuery({
@@ -102,6 +104,8 @@ function Index() {
       <AppHeader />
 
       <main className="mx-auto max-w-6xl px-5 py-10">
+        {user?.role === "ADMIN" && <AdminDashboardPanel />}
+
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl">{t("dossiers")}</h1>
@@ -174,7 +178,7 @@ function Index() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                disabled={createBusy || clientsQuery.isLoading}
+              disabled={createBusy || clientsQuery.isLoading}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
               >
                 {createBusy ? "Création..." : "Créer le dossier"}
@@ -201,8 +205,8 @@ function Index() {
             className="w-full rounded-md border border-input bg-card py-2.5 pe-3 ps-10 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
-
-        <ReminderPanel enabled={canCreate} />
+            <NotificationPanel enabled={canCreate} />
+            <ReminderPanel enabled={canCreate} />
 
         {dossiersQuery.isLoading && (
           <p className="text-muted-foreground">Chargement des dossiers...</p>

@@ -35,9 +35,6 @@ export function AppHeader() {
           </span>
         </Link>
         <div className="flex items-center gap-3">
-          <span className="hidden rounded-full border border-sidebar-border px-3 py-1 text-xs text-sidebar-foreground/70 sm:inline">
-            {t("demo")}
-          </span>
           <LangSwitch />
           <AccountControl />
         </div>
