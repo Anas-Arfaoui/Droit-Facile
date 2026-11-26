@@ -9,6 +9,7 @@ import { listClients } from "@/api/users";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { ReminderPanel } from "@/components/ReminderPanel";
+import { AdminDashboardPanel } from "@/components/AdminDashboardPanel";
 import { NotificationPanel } from "@/components/NotificationPanel";
 
 const PROGRESS_STEPS = 4;
@@ -103,6 +104,8 @@ function Index() {
       <AppHeader />
 
       <main className="mx-auto max-w-6xl px-5 py-10">
+        {user?.role === "ADMIN" && <AdminDashboardPanel />}
+
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl">{t("dossiers")}</h1>
