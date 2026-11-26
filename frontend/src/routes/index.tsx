@@ -9,6 +9,7 @@ import { listClients } from "@/api/users";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { ReminderPanel } from "@/components/ReminderPanel";
+import { NotificationPanel } from "@/components/NotificationPanel";
 
 const PROGRESS_STEPS = 4;
 
@@ -201,8 +202,8 @@ function Index() {
             className="w-full rounded-md border border-input bg-card py-2.5 pe-3 ps-10 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
-
-        <ReminderPanel enabled={canCreate} />
+            <NotificationPanel enabled={canCreate} />
+            <ReminderPanel enabled={canCreate} />
 
         {dossiersQuery.isLoading && (
           <p className="text-muted-foreground">Chargement des dossiers...</p>
