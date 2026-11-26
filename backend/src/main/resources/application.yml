@@ -23,6 +23,8 @@ app:
     password: Admin12345
   notifications:
     cron: "0 0 8 * * *"
+    whatsapp:
+      enabled: ${APP_WHATSAPP_ENABLED:false}
 
 server:
   port: 8081
