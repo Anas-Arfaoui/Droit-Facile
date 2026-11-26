@@ -40,4 +40,12 @@ public class NotificationController {
                 Map.of("notificationsCreees", count)
         );
     }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public NotificationDtos.Response create(
+            @RequestBody NotificationDtos.CreateRequest request
+    ) {
+        return notificationService.creerMessageAdmin(request);
+    }
 }

@@ -54,7 +54,7 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
     try {
       await createEcheance(dossierId, {
         titre: titre.trim(),
-        description: description.trim() || undefined,
+        ...(description.trim() ? { description: description.trim() } : {}),
         dateEcheance,
         rappelJoursAvant: Number(rappelJoursAvant),
       });
@@ -130,7 +130,7 @@ export function EcheancePanel({ dossierId }: { dossierId: number }) {
     try {
       await updateEcheance(editingId, {
         titre: editTitre.trim(),
-        description: editDescription.trim() || undefined,
+        ...(editDescription.trim() ? { description: editDescription.trim() } : {}),
         dateEcheance: editDate,
         rappelJoursAvant: Number(editRappel),
         statut: editStatut,

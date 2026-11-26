@@ -10,6 +10,12 @@ export type Notification = {
   creeLe: string;
 };
 
+export type CreateNotificationRequest = {
+  destinataireId: number;
+  titre: string;
+  message: string;
+};
+
 export function listNotifications(): Promise<Notification[]> {
   return apiRequest<Notification[]>("/notifications");
 }
@@ -17,5 +23,14 @@ export function listNotifications(): Promise<Notification[]> {
 export function markNotificationAsRead(id: number): Promise<Notification> {
   return apiRequest<Notification>(`/notifications/${id}/lu`, {
     method: "PATCH",
+  });
+}
+
+export function createNotification(
+  data: CreateNotificationRequest,
+): Promise<Notification> {
+  return apiRequest<Notification>("/notifications", {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 }
