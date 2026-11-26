@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FolderOpen, Plus, Search } from "lucide-react";
@@ -93,7 +93,9 @@ function Index() {
       setCreateBusy(false);
     }
   }
-
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
   return (
     <div className="min-h-screen">
       <AppHeader />
