@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.droitfacile.echeance.EcheanceDtos.RappelResponse;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -41,6 +43,15 @@ public class EcheanceController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(service.create(dossierId, request, auth.getName()));
+    }
+    
+    @GetMapping("/echeances/rappels")
+    @PreAuthorize("hasAnyRole('AVOCAT', 'ADMIN')")
+    public List<RappelResponse> reminders(
+            @RequestParam(defaultValue = "30") int jours,
+            Authentication auth
+    ) {
+        return service.rappels(jours, auth.getName());
     }
 
     @GetMapping("/echeances/{id}")

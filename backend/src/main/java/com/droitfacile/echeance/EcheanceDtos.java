@@ -56,5 +56,32 @@ public class EcheanceDtos {
                     echeance.getModifieLe()
             );
         }
-    }
+}
+        public record RappelResponse(
+                Long id,
+                Long dossierId,
+                String dossierTitre,
+                String clientNom,
+                String titre,
+                String description,
+                java.time.LocalDate dateEcheance,
+                Integer rappelJoursAvant,
+                StatutEcheance statut,
+                boolean enRetard
+        ) {
+        public static RappelResponse from(Echeance echeance, java.time.LocalDate aujourdHui) {
+                return new RappelResponse(
+                        echeance.getId(),
+                        echeance.getDossier().getId(),
+                        echeance.getDossier().getTitre(),
+                        echeance.getDossier().getClient().getNom(),
+                        echeance.getTitre(),
+                        echeance.getDescription(),
+                        echeance.getDateEcheance(),
+                        echeance.getRappelJoursAvant(),
+                        echeance.getStatut(),
+                        echeance.getDateEcheance().isBefore(aujourdHui)
+                );
+        }
+        }
 }
