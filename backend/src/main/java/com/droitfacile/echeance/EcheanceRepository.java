@@ -22,4 +22,5 @@ public interface EcheanceRepository extends JpaRepository<Echeance, Long> {
             Collection<StatutEcheance> statuts,
             LocalDate date
     );
+    List<Echeance> findByStatutIn(Collection<StatutEcheance> statuts);
 }

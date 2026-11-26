@@ -21,6 +21,8 @@ app:
   admin:
     email: admin@droitfacile.com
     password: Admin12345
+  notifications:
+    cron: "0 0 8 * * *"
 
 server:
   port: 8081
