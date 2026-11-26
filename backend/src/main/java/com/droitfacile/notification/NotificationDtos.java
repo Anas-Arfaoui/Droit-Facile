@@ -7,6 +7,13 @@ public final class NotificationDtos {
     private NotificationDtos() {
     }
 
+    public record CreateRequest(
+            Long destinataireId,
+            String titre,
+            String message
+    ) {
+    }
+
     public record Response(
             Long id,
             Long echeanceId,

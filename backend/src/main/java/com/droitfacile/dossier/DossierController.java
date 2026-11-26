@@ -6,7 +6,9 @@ import com.droitfacile.dossier.DossierDtos.StatutRequest;
 import com.droitfacile.dossier.DossierDtos.UpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +20,11 @@ import java.util.List;
 public class DossierController {
 
     private final DossierService service;
+    private final DossierPdfService pdfService;
 
-    public DossierController(DossierService service) {
+    public DossierController(DossierService service, DossierPdfService pdfService) {
         this.service = service;
+        this.pdfService = pdfService;
     }
 
     @PostMapping
@@ -37,6 +41,19 @@ public class DossierController {
     @GetMapping("/{id}")
     public Response get(@PathVariable Long id, Authentication auth) {
         return service.get(id, auth.getName());
+    }
+
+    @GetMapping("/{id}/export.pdf")
+    public ResponseEntity<ByteArrayResource> exportPdf(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        byte[] pdf = pdfService.generate(id, auth.getName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=\"dossier-" + id + ".pdf\"")
+                .contentLength(pdf.length)
+                .body(new ByteArrayResource(pdf));
     }
 
     @PutMapping("/{id}")

@@ -35,4 +35,12 @@ public class UserController {
     public List<UserResponse> clients() {
         return userRepository.findByRole(Role.CLIENT).stream().map(UserResponse::from).toList();
     }
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<UserResponse> all() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserResponse::from)
+                .toList();
+    }
 }

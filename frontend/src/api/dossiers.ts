@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiBlob, apiRequest } from "./client";
 
 export type DossierStatus = "OUVERT" | "EN_COURS" | "EN_ATTENTE" | "CLOTURE";
 
@@ -50,6 +50,10 @@ export async function getSharedDossier(token: string): Promise<Dossier> {
 
 export async function getDossier(id: number): Promise<Dossier> {
   return apiRequest<Dossier>(`/dossiers/${id}`);
+}
+
+export function exportDossierPdf(id: number): Promise<Blob> {
+  return apiBlob(`/dossiers/${id}/export.pdf`);
 }
 
 export async function createDossier(data: CreateDossierRequest): Promise<Dossier> {

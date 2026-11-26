@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class NotificationService {
@@ -114,6 +115,39 @@ public class NotificationService {
         }
 
         notification.setLu(true);
+
+        return NotificationDtos.Response.from(
+                notificationRepository.save(notification)
+        );
+    }
+
+    @Transactional
+    public NotificationDtos.Response creerMessageAdmin(
+            NotificationDtos.CreateRequest request
+    ) {
+        if (request.destinataireId() == null
+                || request.titre() == null
+                || request.titre().isBlank()
+                || request.message() == null
+                || request.message().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Destinataire, titre et message sont obligatoires"
+            );
+        }
+
+        User destinataire = userRepository.findById(request.destinataireId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Destinataire introuvable"
+                ));
+
+        Notification notification = new Notification();
+        notification.setDestinataire(destinataire);
+        notification.setType(TypeNotification.MESSAGE_ADMIN);
+        notification.setTitre(request.titre().trim());
+        notification.setMessage(request.message().trim());
+        notification.setCle("ADMIN-" + UUID.randomUUID());
 
         return NotificationDtos.Response.from(
                 notificationRepository.save(notification)

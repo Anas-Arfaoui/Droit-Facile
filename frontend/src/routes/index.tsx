@@ -205,7 +205,7 @@ function Index() {
             className="w-full rounded-md border border-input bg-card py-2.5 pe-3 ps-10 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
-            <NotificationPanel enabled={canCreate} />
+            <NotificationPanel enabled={Boolean(user)} />
             <ReminderPanel enabled={canCreate} />
 
         {dossiersQuery.isLoading && (

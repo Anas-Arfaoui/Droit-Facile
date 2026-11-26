@@ -64,3 +64,13 @@ L'utilisation d'un modèle local Ollama est reportée. L'IA reste donc désactiv
 
 Le Sprint 3 n'est pas commencé : rappels d'échéances, résumé IA exportable et réponses IA sourcées restent à développer.
 
+
+## Mise à jour du 26 novembre 2026
+
+Les développements purs du Sprint 3 sont maintenant couverts : export PDF réel, notifications internes, scheduler des rappels et quatre tests backend d’intégration validés. Les tests couvrent l’accès aux dossiers et au PDF, la création de notifications ADMIN, le CRUD des échéances et l’absence de doublons du scheduler.
+
+Les mêmes quatre tests ont également été exécutés avec succès contre PostgreSQL 16 dans la base isolée `droitfacile_test`. La base de développement `droitfacile` n’est pas réinitialisée. Commande : `docker run --rm --add-host=host.docker.internal:host-gateway -v "${PWD}/backend:/app" -w /app maven:3.9.9-eclipse-temurin-17 mvn test -B "-Dintegration.db=postgres"`.
+
+Les tests end-to-end frontend sont maintenant ajoutés avec Playwright. Ils couvrent la connexion, les permissions AVOCAT/CLIENT/ADMIN, l'accès aux dossiers, les échéances, les notifications, le tableau de bord ADMIN et le téléchargement PDF. Exécution validée : 3 tests réussis avec `npm run test:e2e` contre Docker.
+
+Les tests PostgreSQL et end-to-end sont donc couverts. WhatsApp et les fonctionnalités IA restent hors périmètre.

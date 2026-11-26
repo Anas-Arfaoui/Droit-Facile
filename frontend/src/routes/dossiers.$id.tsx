@@ -7,7 +7,7 @@ import { ContractPanel } from "@/components/ContractPanel";
 import { EcheancePanel } from "@/components/EcheancePanel";
 import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { DocumentPanel } from "@/components/DocumentPanel";
-import { activateDossierSharing, createSeance, getDossier, listSeances } from "@/api/dossiers";
+import { activateDossierSharing, createSeance, exportDossierPdf, getDossier, listSeances } from "@/api/dossiers";
 import { summarizeContract } from "@/lib/contract-summary.functions";
 import {
   ArrowLeft,
@@ -113,8 +113,25 @@ function DossierPage() {
   const [shareToken, setShareToken] = useState(d.partageToken ?? null);
   const [shareBusy, setShareBusy] = useState(false);
   const [shareError, setShareError] = useState("");
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const [contracts, setContracts] = useState<NewContract[]>([]);
+
+  async function handleExportPdf() {
+    if (pdfBusy || !validated) return;
+    setPdfBusy(true);
+    try {
+      const blob = await exportDossierPdf(d.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `dossier-${d.id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   async function handleCreateSeance(event: React.FormEvent) {
     event.preventDefault();
@@ -290,12 +307,12 @@ function DossierPage() {
                     <Check className="h-4 w-4" /> {t("validate")}
                   </button>
                 )}
-                <button
-                  onClick={() => window.print()}
+                  <button
+                    onClick={handleExportPdf}
                   disabled={!validated}
                   className="rounded-md border border-input px-4 py-2 text-sm disabled:opacity-50"
                 >
-                  {t("exportPdf")}
+                    {pdfBusy ? "Génération..." : t("exportPdf")}
                 </button>
               </div>
             </div>

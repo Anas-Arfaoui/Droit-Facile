@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://host.docker.internal:5433/droitfacile_test
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  sql:
+    init:
+      mode: never
+
+app:
+  ocr:
+    enabled: false
+  jwt:
+    secret: test-secret-test-secret-test-secret-test-secret
+    expiration-ms: 3600000
+  admin:
+    email: admin-test@droitfacile.test
+    password: Admin12345
+  notifications:
+    cron: "0 0 8 * * *"
