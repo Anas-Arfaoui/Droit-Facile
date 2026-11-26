@@ -9,7 +9,9 @@ import com.droitfacile.echeance.EcheanceDtos.UpdateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.droitfacile.user.User;
+import com.droitfacile.user.UserRepository;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -18,15 +20,18 @@ public class EcheanceService {
     private final EcheanceRepository echeanceRepository;
     private final DossierService dossierService;
     private final AuditService auditService;
+    private final UserRepository userRepository;
 
     public EcheanceService(
             EcheanceRepository echeanceRepository,
             DossierService dossierService,
-            AuditService auditService
+            AuditService auditService,
+            UserRepository userRepository
     ) {
         this.echeanceRepository = echeanceRepository;
         this.dossierService = dossierService;
         this.auditService = auditService;
+        this.userRepository = userRepository;
     }
 
     public Response create(Long dossierId, CreateRequest request, String email) {
@@ -98,6 +103,53 @@ public class EcheanceService {
         echeanceRepository.delete(echeance);
 
         auditService.log(email, "ECHEANCE_SUPPRIMEE", "Echeance", id);
+    }
+    public List<EcheanceDtos.RappelResponse> rappels(
+        int jours,
+        String email
+    ) {
+        if (jours < 0 || jours > 365) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le nombre de jours doit être compris entre 0 et 365"
+            );
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Utilisateur introuvable"
+                ));
+
+        List<StatutEcheance> statuts = List.of(
+                StatutEcheance.A_VENIR,
+                StatutEcheance.EN_COURS
+        );
+
+        LocalDate limite = LocalDate.now().plusDays(jours);
+
+        List<Echeance> echeances;
+
+        if (user.getRole() == com.droitfacile.user.Role.ADMIN) {
+            echeances = echeanceRepository
+                    .findByStatutInAndDateEcheanceLessThanEqualOrderByDateEcheanceAsc(
+                            statuts,
+                            limite
+                    );
+        } else {
+            echeances = echeanceRepository
+                    .findByDossierAvocatIdAndStatutInAndDateEcheanceLessThanEqualOrderByDateEcheanceAsc(
+                            user.getId(),
+                            statuts,
+                            limite
+                    );
+        }
+
+        LocalDate aujourdHui = LocalDate.now();
+
+        return echeances.stream()
+                .map(echeance -> EcheanceDtos.RappelResponse.from(echeance, aujourdHui))
+                .toList();
     }
 
     private Echeance findOwned(Long id, String email) {
