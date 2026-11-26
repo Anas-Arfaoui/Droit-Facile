@@ -32,6 +32,7 @@ public class DossierService {
 
     public Response create(CreateRequest req, String email) {
         User avocat = findUser(email);
+
         User client = userRepository.findById(req.clientId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable"));
         if (client.getRole() != Role.CLIENT) {

@@ -51,7 +51,7 @@ function Index() {
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState("");
 
-  const canCreate = user?.role === "AVOCAT" || user?.role === "ADMIN";
+  const canCreate = user?.role === "AVOCAT";
   const [q, setQ] = useState("");
 
   const dossiersQuery = useQuery({
@@ -178,7 +178,7 @@ function Index() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                disabled={createBusy || clientsQuery.isLoading}
+              disabled={createBusy || clientsQuery.isLoading}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
               >
                 {createBusy ? "Création..." : "Créer le dossier"}
