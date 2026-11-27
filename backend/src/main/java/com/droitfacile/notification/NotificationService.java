@@ -5,6 +5,7 @@ import com.droitfacile.echeance.EcheanceRepository;
 import com.droitfacile.echeance.StatutEcheance;
 import com.droitfacile.user.User;
 import com.droitfacile.user.UserRepository;
+import com.droitfacile.user.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -152,5 +153,18 @@ public class NotificationService {
         return NotificationDtos.Response.from(
                 notificationRepository.save(notification)
         );
+    }
+
+    @Transactional
+    public void notifierAdminsNouvelleDemande(Long requestId, String nom, String email, String role) {
+        for (User admin : userRepository.findByRole(Role.ADMIN)) {
+            Notification notification = new Notification();
+            notification.setDestinataire(admin);
+            notification.setType(TypeNotification.DEMANDE_INSCRIPTION);
+            notification.setTitre("Nouvelle demande d'inscription");
+            notification.setMessage(nom + " (" + role + ") a envoyé une demande de création de compte : " + email);
+            notification.setCle("INSCRIPTION-" + requestId + "-ADMIN-" + admin.getId());
+            notificationRepository.save(notification);
+        }
     }
 }

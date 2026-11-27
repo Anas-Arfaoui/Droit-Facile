@@ -31,5 +31,8 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    private boolean actif = true;
+
     private LocalDateTime creeLe = LocalDateTime.now();
 }

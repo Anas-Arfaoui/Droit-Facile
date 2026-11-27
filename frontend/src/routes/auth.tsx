@@ -35,6 +35,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("CLIENT");
+  const [avocatNom, setAvocatNom] = useState("");
+  const [avocatId, setAvocatId] = useState("");
+  const [officialRecords, setOfficialRecords] = useState("");
+  const [correspondenceRecords, setCorrespondenceRecords] = useState("");
+  const [numeroAffaire, setNumeroAffaire] = useState("");
+  const [contractFile, setContractFile] = useState<File | undefined>();
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -54,11 +60,18 @@ function AuthPage() {
     setMessage("");
     try {
       if (mode === "signup") {
-        const outcome = await registerAccount(email, password, name, window.location.origin, role);
-        if (outcome === "confirm-email")
+        const outcome = await registerAccount(email, password, name, window.location.origin, role, {
+          ...(avocatNom.trim() ? { avocatNom: avocatNom.trim() } : {}),
+          ...(avocatId ? { avocatId: Number(avocatId) } : {}),
+          ...(officialRecords.trim() ? { officialRecords: officialRecords.trim() } : {}),
+          ...(correspondenceRecords.trim() ? { correspondenceRecords: correspondenceRecords.trim() } : {}),
+          ...(numeroAffaire.trim() ? { numeroAffaire: numeroAffaire.trim() } : {}),
+          ...(contractFile ? { contractFile } : {}),
+        });
+        if (outcome === "pending-review")
           setMessage(
             l({
-              fr: "Consultez votre e-mail pour confirmer votre compte avant de vous connecter.",
+              fr: "Votre demande a été envoyée. Un administrateur doit vérifier vos informations avant l'activation du compte.",
               ar: "تحقق من بريدك الإلكتروني لتأكيد حسابك قبل تسجيل الدخول.",
             }),
           );
@@ -152,6 +165,35 @@ function AuthPage() {
                 <option value="AVOCAT">Avocat</option>
               </select>
             </label>
+          )}
+          {mode === "signup" && role === "AVOCAT" && (
+            <div className="space-y-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-sm font-semibold">Vérification professionnelle</p>
+              <label className="block text-sm font-medium">Documents officiels
+                <input required value={officialRecords} onChange={(event) => setOfficialRecords(event.target.value)} placeholder="Ex. numéro d'inscription au barreau" className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3" />
+              </label>
+              <label className="block text-sm font-medium">Documents de correspondance
+                <input required value={correspondenceRecords} onChange={(event) => setCorrespondenceRecords(event.target.value)} placeholder="Ex. adresse professionnelle ou justificatif" className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3" />
+              </label>
+            </div>
+          )}
+          {mode === "signup" && role === "CLIENT" && (
+            <div className="space-y-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-sm font-semibold">Informations du dossier</p>
+              <label className="block text-sm font-medium">Nom de votre avocat
+                <input required value={avocatNom} onChange={(event) => setAvocatNom(event.target.value)} placeholder="Nom complet de l'avocat" className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3" />
+              </label>
+              <label className="block text-sm font-medium">ID de l'avocat
+                <input required type="number" min="1" value={avocatId} onChange={(event) => setAvocatId(event.target.value)} placeholder="ID communiqué par votre avocat" className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3" />
+              </label>
+              <label className="block text-sm font-medium">Numéro d'affaire <span className="font-normal text-muted-foreground">(ou contrat ci-dessous)</span>
+                <input value={numeroAffaire} onChange={(event) => setNumeroAffaire(event.target.value)} placeholder="Ex. AFF-2026-001" className="mt-2 h-11 w-full rounded-md border border-input bg-card px-3" />
+              </label>
+              <label className="block text-sm font-medium">Contrats et accords
+                <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={(event) => setContractFile(event.target.files?.[0])} className="mt-2 block w-full text-sm" />
+                <span className="mt-1 block text-xs font-normal text-muted-foreground">Fournissez un fichier si vous n'avez pas encore le numéro d'affaire.</span>
+              </label>
+            </div>
           )}
           <label className="block text-sm font-medium">
             {l({ fr: "Adresse e-mail", ar: "البريد الإلكتروني" })}

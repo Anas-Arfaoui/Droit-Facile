@@ -13,7 +13,7 @@ export function ReminderPanel({ enabled = true }: { enabled?: boolean }) {
 
   if (remindersQuery.isLoading) {
     return (
-      <section className="mb-6 rounded-lg border border-border bg-card p-5">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <p className="text-sm text-muted-foreground">Chargement des rappels...</p>
       </section>
     );
@@ -21,7 +21,7 @@ export function ReminderPanel({ enabled = true }: { enabled?: boolean }) {
 
   if (remindersQuery.isError) {
     return (
-      <section className="mb-6 rounded-lg border border-border bg-card p-5">
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <p className="text-sm text-destructive">Impossible de charger les rappels.</p>
       </section>
     );
@@ -30,7 +30,7 @@ export function ReminderPanel({ enabled = true }: { enabled?: boolean }) {
   const reminders = remindersQuery.data ?? [];
 
   return (
-    <section className="mb-6 rounded-lg border border-border bg-card p-5">
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="flex items-center gap-2">
         <CalendarClock className="h-5 w-5 text-accent" />
         <h2 className="text-xl">Rappels d'échéances</h2>
@@ -43,7 +43,7 @@ export function ReminderPanel({ enabled = true }: { enabled?: boolean }) {
           {reminders.map((reminder) => (
             <article
               key={reminder.id}
-              className={`rounded-md border p-4 ${
+              className={`rounded-xl border p-4 ${
                 reminder.enRetard ? "border-destructive/40 bg-destructive/5" : "border-border"
               }`}
             >
