@@ -3,14 +3,16 @@ package com.droitfacile.auth;
 import com.droitfacile.auth.AuthDtos.AuthResponse;
 import com.droitfacile.auth.AuthDtos.LoginRequest;
 import com.droitfacile.auth.AuthDtos.RegisterRequest;
-import com.droitfacile.user.UserController.UserResponse;
+import com.droitfacile.auth.AuthDtos.RegistrationResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,9 +24,10 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(req));
+    @PostMapping(value = "/register", consumes = "multipart/form-data")
+    public ResponseEntity<RegistrationResponse> register(@Valid @RequestPart("data") RegisterRequest req,
+                                                         @RequestPart(value = "contractFile", required = false) MultipartFile contractFile) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(req, contractFile));
     }
 
     @PostMapping("/login")

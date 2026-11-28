@@ -12,8 +12,15 @@ public class AuthDtos {
             @NotBlank String nom,
             @NotBlank @Email String email,
             @NotBlank @Size(min = 8, message = "8 caracteres minimum") String motDePasse,
-            @NotNull Role role) {
+            @NotNull Role role,
+            String avocatNom,
+            Long avocatId,
+            String officialRecords,
+            String correspondenceRecords,
+            String numeroAffaire) {
     }
+
+    public record RegistrationResponse(Long id, String nom, String email, Role role, String status) {}
 
     public record LoginRequest(
             @NotBlank @Email String email,

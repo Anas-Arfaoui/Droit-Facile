@@ -1,4 +1,4 @@
-import { loginUser, logoutUser, registerUser, type Role } from "@/api/auth";
+import { loginUser, logoutUser, registerUser, type RegisterRequest, type Role } from "@/api/auth";
 
 export async function registerAccount(
   email: string,
@@ -6,20 +6,16 @@ export async function registerAccount(
   displayName: string,
   _origin: string,
   role: Role = "CLIENT",
+  details: Omit<RegisterRequest, "nom" | "email" | "motDePasse" | "role"> = {},
 ) {
   await registerUser({
     nom: displayName.trim(),
     email,
     motDePasse: password,
     role,
+    ...details,
   });
-
-  await loginUser({
-    email,
-    motDePasse: password,
-  });
-
-  return "signed-in";
+  return "pending-review";
 }
 
 export async function signOutAccount(queryClient: {

@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Scale } from "lucide-react";
+import { LayoutDashboard, Scale, ShieldCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { AccountControl } from "@/components/AccountControl";
+import { NotificationPanel } from "@/components/NotificationPanel";
+import { useAuth } from "@/lib/auth";
 
 export function LangSwitch() {
   const { lang, setLang } = useI18n();
@@ -22,19 +24,39 @@ export function LangSwitch() {
 
 export function AppHeader() {
   const { t } = useI18n();
+  const { user } = useAuth();
   return (
-    <header className="bg-sidebar text-sidebar-foreground">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
+    <header className="sticky top-0 z-30 border-b border-sidebar-border bg-sidebar/95 text-sidebar-foreground backdrop-blur">
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
             <Scale className="h-5 w-5" />
           </span>
           <span>
-            <span className="block font-serif text-xl leading-none">{t("app")}</span>
-            <span className="text-xs text-sidebar-foreground/60">{t("tagline")}</span>
+            <span className="block font-serif text-lg leading-none sm:text-xl">{t("app")}</span>
+            <span className="hidden text-xs text-sidebar-foreground/60 sm:block">{t("tagline")}</span>
           </span>
         </Link>
+
+        {user && (
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Navigation principale">
+            <Link
+              to="/"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-foreground" }}
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Tableau de bord
+            </Link>
+            <span className="inline-flex items-center gap-2 rounded-full border border-sidebar-border px-3 py-1.5 text-xs font-medium text-sidebar-foreground/70">
+              {user.role === "ADMIN" && <ShieldCheck className="h-3.5 w-3.5 text-sidebar-primary" />}
+              {user.role}
+            </span>
+          </nav>
+        )}
+
         <div className="flex items-center gap-3">
+          <NotificationPanel enabled={Boolean(user)} variant="header" />
           <LangSwitch />
           <AccountControl />
         </div>

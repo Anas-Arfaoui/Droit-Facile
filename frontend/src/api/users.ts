@@ -8,3 +8,10 @@ export async function listClients(): Promise<User[]> {
 export async function listUsers(): Promise<User[]> {
   return apiRequest<User[]>("/users");
 }
+
+export async function updateUserStatus(id: string | number, actif: boolean): Promise<User> {
+  return apiRequest<User>(`/users/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ actif }),
+  });
+}

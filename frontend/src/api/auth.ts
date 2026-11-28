@@ -10,6 +10,7 @@ export type User = {
   prenom: string;
   telephone: string;
   adresse: string;
+  actif?: boolean;
 };
 
 export const AUTH_CHANGED_EVENT = "lawyer-up-auth-changed";
@@ -19,21 +20,32 @@ export type AuthResponse = {
   token: string;
 };
 
-type RegisterRequest = {
+export type RegisterRequest = {
   nom: string;
   email: string;
   motDePasse: string;
   role: Role;
+  avocatNom?: string;
+  avocatId?: number;
+  officialRecords?: string;
+  correspondenceRecords?: string;
+  numeroAffaire?: string;
+  contractFile?: File;
 };
+export type RegistrationResponse = { id: number; nom: string; email: string; role: Role; status: string };
 type LoginRequest = {
   email: string;
   motDePasse: string;
 };
 
-export async function registerUser(data: RegisterRequest): Promise<User> {
-  return apiRequest<User>("/auth/register", {
+export async function registerUser(data: RegisterRequest): Promise<RegistrationResponse> {
+  const { contractFile, ...requestData } = data;
+  const form = new FormData();
+  form.append("data", new Blob([JSON.stringify(requestData)], { type: "application/json" }));
+  if (contractFile) form.append("contractFile", contractFile);
+  return apiRequest<RegistrationResponse>("/auth/register", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: form,
   });
 }
 
